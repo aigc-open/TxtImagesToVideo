@@ -61,7 +61,7 @@ def create_image_video(image_path, duration, output_path):
 
 def merge_videos(video_list, output_path):
     """
-    合并多个视频
+    合并多个视频（内部使用）
     
     Args:
         video_list: 视频文件路径列表
@@ -96,6 +96,45 @@ def merge_videos(video_list, output_path):
     list_file.unlink()
     
     return output_path
+
+
+def merge_videos_simple(input_videos, output_video):
+    """
+    合并多个视频文件为一个视频（命令行使用）
+    
+    Args:
+        input_videos: 视频文件路径，多个视频用逗号分隔（例如: a.mp4,b.mp4,c.mp4）
+        output_video: 输出视频路径
+    
+    Returns:
+        Path: 输出视频路径
+    """
+    # 解析视频文件列表
+    video_files = [Path(v.strip()) for v in input_videos.split(',')]
+    
+    # 验证文件是否存在
+    for video_file in video_files:
+        if not video_file.exists():
+            raise FileNotFoundError(f"视频文件不存在: {video_file}")
+    
+    output_path = Path(output_video)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    
+    print("=" * 60)
+    print("视频合并工具")
+    print("=" * 60)
+    print(f"\n输入视频: {len(video_files)} 个")
+    for i, video in enumerate(video_files, 1):
+        print(f"  {i}. {video}")
+    print(f"输出视频: {output_path}")
+    
+    print(f"\n正在合并视频...")
+    result = merge_videos(video_files, output_path)
+    
+    print(f"\n✅ 视频合并完成: {result}")
+    print("=" * 60)
+    
+    return result
 
 
 def add_audio_to_video(video_path, audio_path, output_path):

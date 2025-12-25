@@ -14,7 +14,7 @@ if readme_file.exists():
 
 setup(
     name="txt_images_to_ai_video",
-    version="0.1.0",
+    version="0.2.0",
     author="Your Name",
     author_email="your.email@example.com",
     description="将图片和旁白转化成视频的工具，使用 OpenAI TTS 服务",
@@ -37,6 +37,7 @@ setup(
     python_requires=">=3.8",
     install_requires=[
         "openai>=1.0.0",
+        "fire>=0.5.0",
     ],
     entry_points={
         "console_scripts": [

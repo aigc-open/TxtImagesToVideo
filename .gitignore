@@ -54,3 +54,4 @@ temp/
 htmlcov/
 test.sh
 test/
+output
