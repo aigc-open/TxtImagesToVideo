@@ -68,6 +68,17 @@ def parse_args():
         help="临时文件目录（默认: 输出视频所在目录下的 temp 文件夹）"
     )
     
+    parser.add_argument(
+        "--audio_file",
+        help="语音文件路径（可选）：如果文件存在则使用，不存在则生成到该路径"
+    )
+    
+    parser.add_argument(
+        "--keep_audio",
+        action="store_true",
+        help="保留生成的语音文件（默认会清理）"
+    )
+    
     return parser.parse_args()
 
 
@@ -106,6 +117,12 @@ def main():
         print(f"  语音类型: {args.voice}")
         print(f"  语速: {args.speed}")
         print(f"  模型: {args.model}")
+        if args.audio_file:
+            audio_path = Path(args.audio_file)
+            if audio_path.exists():
+                print(f"  语音文件: {args.audio_file} (使用已有)")
+            else:
+                print(f"  语音文件: {args.audio_file} (将生成到此)")
         
         tts_service = TTSService(
             voice=args.voice,
@@ -119,7 +136,9 @@ def main():
             image_files=image_files,
             output_video=output_video,
             tts_service=tts_service,
-            temp_dir=args.temp_dir
+            temp_dir=args.temp_dir,
+            audio_file=args.audio_file,
+            keep_audio=args.keep_audio
         )
         
         print("\n" + "=" * 60)

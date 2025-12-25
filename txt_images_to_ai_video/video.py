@@ -128,7 +128,7 @@ def add_audio_to_video(video_path, audio_path, output_path):
     return output_path
 
 
-def create_video(text_file, image_files, output_video, tts_service, temp_dir=None):
+def create_video(text_file, image_files, output_video, tts_service, temp_dir=None, audio_file=None, keep_audio=False):
     """
     创建视频的主函数
     
@@ -138,6 +138,8 @@ def create_video(text_file, image_files, output_video, tts_service, temp_dir=Non
         output_video: 输出视频路径
         tts_service: TTS 服务实例
         temp_dir: 临时文件目录，默认为输出视频所在目录下的 temp 文件夹
+        audio_file: 已有的语音文件路径（可选），如果提供则跳过TTS生成
+        keep_audio: 是否保留生成的语音文件（默认False）
     
     Returns:
         Path: 输出视频路径
@@ -160,10 +162,31 @@ def create_video(text_file, image_files, output_video, tts_service, temp_dir=Non
     if not text:
         raise ValueError(f"文本文件为空: {text_file}")
     
-    # 生成语音
-    print(f"\n步骤 1/3: 生成语音")
-    audio_path = temp_dir / "audio.mp3"
-    tts_service.text_to_speech(text, audio_path)
+    # 生成或使用现有语音
+    print(f"\n步骤 1/3: 处理语音文件")
+    should_cleanup_audio = False  # 标记是否需要清理音频文件
+    
+    # 检查是否提供了语音文件路径
+    if audio_file:
+        audio_file = Path(audio_file)
+        if audio_file.exists():
+            print(f"✅ 使用已有语音文件: {audio_file}")
+            audio_path = audio_file
+        else:
+            print(f"语音文件不存在，生成到: {audio_file}")
+            # 确保目录存在
+            audio_file.parent.mkdir(parents=True, exist_ok=True)
+            tts_service.text_to_speech(text, audio_file)
+            audio_path = audio_file
+    else:
+        # 没有指定 audio_file，使用默认临时路径
+        audio_path = temp_dir / "audio.mp3"
+        if audio_path.exists():
+            print(f"✅ 发现已有语音文件，跳过生成: {audio_path}")
+        else:
+            print(f"生成新语音文件...")
+            tts_service.text_to_speech(text, audio_path)
+            should_cleanup_audio = True
     
     # 获取音频时长
     audio_duration = get_audio_duration(audio_path)
@@ -201,8 +224,11 @@ def create_video(text_file, image_files, output_video, tts_service, temp_dir=Non
     for segment in video_segments:
         if segment.exists():
             segment.unlink()
-    if audio_path.exists():
+    # 只清理我们生成的音频文件，保留已有的或用户要求保留的
+    if should_cleanup_audio and not keep_audio and audio_path.exists():
         audio_path.unlink()
+    elif keep_audio and audio_path.exists():
+        print(f"✅ 语音文件已保留: {audio_path}")
     if len(video_segments) > 1 and merged_video.exists():
         merged_video.unlink()
     
