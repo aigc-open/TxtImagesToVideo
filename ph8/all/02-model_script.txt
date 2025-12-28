@@ -1,0 +1,12 @@
+让我们看看PH8丰富的模型广场。
+
+平台汇聚了数百个精选模型，覆盖对话、生图、视频等全场景AI能力。
+
+对话模型方面，有OpenAI的GPT系列、Anthropic的Claude、Google的Gemini、xAI的Grok，还有国产的DeepSeek和字节的豆包。
+
+图像生成包括可灵、豆包SeeDream等顶级模型，能满足电商设计、广告创意等各种需求。
+
+视频生成更是支持OpenAI的Sora和豆包SeeDance系列，让创意内容生产变得轻而易举。
+
+多规格选择，总有一款适合你！
+

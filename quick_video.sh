@@ -6,17 +6,16 @@
 cd "$(dirname "$0")"
 
 # 目录配置
-STATIC_DIR="output"          # 静态资源目录（输入：图片、旁白文本）
-OUTPUT_DIR="output"          # 输出目录（生成的视频）
+STATIC_DIR="/workspace/code/github/TxtImagesToVideo/ph8/all/"          # 静态资源目录（输入：图片、旁白文本）
+OUTPUT_DIR="$STATIC_DIR/output"          # 输出目录（生成的视频）
 VIDEO_DIR="$OUTPUT_DIR/videos"  # 章节视频目录
 
 # 配置章节列表（格式：图片文件名:旁白文件名:视频文件名:章节标题）
 CHAPTERS=(
-  "01_cover.png:01_cover_script.txt:01_cover.mp4:封面"
-  "02_features.png:02_features_script.txt:02_features.mp4:核心功能"
-  "03_installation.png:03_installation_script.txt:03_installation.mp4:快速开始"
-  "04_usage.png:04_usage_script.txt:04_usage.mp4:使用示例"
-  "05_summary.png:05_summary_script.txt:05_summary.mp4:总结"
+  "01-home-provider.png,01-home.png:01-home_script.txt:01-home.mp4:首页"
+  "02-model.png,02-model-image.png,02-model-video.png:02-model_script.txt:02-model.mp4:模型"
+  "03-api.png:03-api_script.txt:03-api.mp4:API"
+  "04-cases.png,04-cases-docs.png:04-cases_script.txt:04-cases.mp4:案例"
 )
 
 # 语音配置
@@ -39,9 +38,19 @@ for chapter in "${CHAPTERS[@]}"; do
   
   echo "生成章节：${title}..."
   
+  # 处理多个图片的情况（逗号分隔）
+  # 将相对路径转换为绝对路径
+  IFS=',' read -ra IMAGE_ARRAY <<< "$image_file"
+  IMAGE_PATHS=()
+  for img in "${IMAGE_ARRAY[@]}"; do
+    IMAGE_PATHS+=("$STATIC_DIR/${img}")
+  done
+  # 用逗号连接所有图片路径
+  IMAGE_INPUT=$(IFS=,; echo "${IMAGE_PATHS[*]}")
+  
   python -m txt_images_to_ai_video generate \
     --input_txt="$STATIC_DIR/${script_file}" \
-    --input_image="$STATIC_DIR/${image_file}" \
+    --input_image="$IMAGE_INPUT" \
     --output_video="$VIDEO_DIR/${video_file}" \
     --voice="$VOICE" \
     --speed="$SPEED"
