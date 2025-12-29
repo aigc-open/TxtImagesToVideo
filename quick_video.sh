@@ -40,6 +40,11 @@ CHAPTERS=(
 VOICE="nova"
 SPEED="1.2"
 
+# 运镜效果配置
+# 可选值: zoom_in(缩放进入), zoom_out(缩放退出), pan_right(向右平移), pan_left(向左平移), 或留空不使用
+CAMERA_EFFECT="zoom_in"
+EFFECT_DURATION="1.5"  # 运镜效果持续时间（秒）
+
 # 创建视频输出目录
 mkdir -p "$VIDEO_DIR"
 
@@ -71,12 +76,22 @@ for chapter in "${CHAPTERS[@]}"; do
     echo "⊙ ${title} 已存在，跳过生成"
     VIDEO_FILES+=("$VIDEO_DIR/${video_file}")
   else
-    python -m txt_images_to_ai_video generate \
-      --input_txt="$STATIC_DIR/${script_file}" \
-      --input_image="$IMAGE_INPUT" \
-      --output_video="$VIDEO_DIR/${video_file}" \
-      --voice="$VOICE" \
+    # 构建命令参数
+    CMD_ARGS=(
+      --input_txt="$STATIC_DIR/${script_file}"
+      --input_image="$IMAGE_INPUT"
+      --output_video="$VIDEO_DIR/${video_file}"
+      --voice="$VOICE"
       --speed="$SPEED"
+    )
+    
+    # 如果设置了运镜效果，添加参数
+    if [ -n "$CAMERA_EFFECT" ]; then
+      CMD_ARGS+=(--camera_effect="$CAMERA_EFFECT")
+      CMD_ARGS+=(--effect_duration="$EFFECT_DURATION")
+    fi
+    
+    python -m txt_images_to_ai_video generate "${CMD_ARGS[@]}"
     
     # 检查视频是否生成成功
     if [ $? -eq 0 ]; then

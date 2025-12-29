@@ -28,7 +28,7 @@ def get_audio_duration(audio_path):
     return float(result.stdout.strip())
 
 
-def create_image_video(image_path, duration, output_path):
+def create_image_video(image_path, duration, output_path, camera_effect=None, effect_duration=1.5):
     """
     将单张图片转换为指定时长的视频
     
@@ -36,17 +36,66 @@ def create_image_video(image_path, duration, output_path):
         image_path: 图片路径
         duration: 视频时长（秒）
         output_path: 输出视频路径
+        camera_effect: 运镜效果类型 ('zoom_in', 'zoom_out', 'pan_right', 'pan_left', None)
+        effect_duration: 运镜效果持续时间（秒），默认1.5秒
     
     Returns:
         Path: 输出视频路径
     """
     output_path = Path(output_path)
     
+    # 基础滤镜：确保宽高是偶数
+    base_filter = 'scale=trunc(iw/2)*2:trunc(ih/2)*2'
+    
+    # 根据运镜效果类型构建滤镜
+    if camera_effect and duration > effect_duration:
+        fps = 30  # 帧率
+        effect_frames = int(effect_duration * fps)
+        total_frames = int(duration * fps)
+        
+        if camera_effect == 'zoom_in':
+            # 缩放进入效果：从1.2倍缩放到1倍（正常大小）
+            zoom_filter = (
+                f"zoompan=z='if(lte(on,{effect_frames}),1.2-0.2*on/{effect_frames},1)'"
+                f":d={total_frames}:s=1920x1080:fps={fps}"
+            )
+            video_filter = f"{base_filter},{zoom_filter}"
+            
+        elif camera_effect == 'zoom_out':
+            # 缩放退出效果：从1倍缩放到1.2倍
+            zoom_filter = (
+                f"zoompan=z='if(lte(on,{effect_frames}),1+0.2*on/{effect_frames},1.2)'"
+                f":d={total_frames}:s=1920x1080:fps={fps}"
+            )
+            video_filter = f"{base_filter},{zoom_filter}"
+            
+        elif camera_effect == 'pan_right':
+            # 向右平移效果
+            zoom_filter = (
+                f"zoompan=z=1.2"
+                f":x='if(lte(on,{effect_frames}),iw/2-(iw/2)*on/{effect_frames},iw/2)'"
+                f":d={total_frames}:s=1920x1080:fps={fps}"
+            )
+            video_filter = f"{base_filter},{zoom_filter}"
+            
+        elif camera_effect == 'pan_left':
+            # 向左平移效果
+            zoom_filter = (
+                f"zoompan=z=1.2"
+                f":x='if(lte(on,{effect_frames}),iw/2+(iw/2)*on/{effect_frames},iw)'"
+                f":d={total_frames}:s=1920x1080:fps={fps}"
+            )
+            video_filter = f"{base_filter},{zoom_filter}"
+        else:
+            video_filter = base_filter
+    else:
+        video_filter = base_filter
+    
     cmd = [
         'ffmpeg',
         '-loop', '1',
         '-i', str(image_path),
-        '-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2',  # 确保宽高是偶数
+        '-vf', video_filter,
         '-c:v', 'libx264',
         '-tune', 'stillimage',
         '-pix_fmt', 'yuv420p',
@@ -167,7 +216,7 @@ def add_audio_to_video(video_path, audio_path, output_path):
     return output_path
 
 
-def create_video(text_file, image_files, output_video, tts_service, temp_dir=None, audio_file=None, keep_audio=False):
+def create_video(text_file, image_files, output_video, tts_service, temp_dir=None, audio_file=None, keep_audio=False, camera_effect=None, effect_duration=1.5):
     """
     创建视频的主函数
     
@@ -179,6 +228,8 @@ def create_video(text_file, image_files, output_video, tts_service, temp_dir=Non
         temp_dir: 临时文件目录，默认为输出视频所在目录下的 temp 文件夹
         audio_file: 已有的语音文件路径（可选），如果提供则跳过TTS生成
         keep_audio: 是否保留生成的语音文件（默认False）
+        camera_effect: 运镜效果类型 ('zoom_in', 'zoom_out', 'pan_right', 'pan_left', None)
+        effect_duration: 运镜效果持续时间（秒），默认1.5秒
     
     Returns:
         Path: 输出视频路径
@@ -241,7 +292,9 @@ def create_video(text_file, image_files, output_video, tts_service, temp_dir=Non
     for i, image_file in enumerate(image_files, 1):
         print(f"  处理图片 {i}/{num_images}: {image_file.name}")
         segment_path = temp_dir / f"segment_{i:03d}.mp4"
-        create_image_video(image_file, duration_per_image, segment_path)
+        # 只在第一张图片上应用运镜效果
+        effect = camera_effect if i == 1 else None
+        create_image_video(image_file, duration_per_image, segment_path, camera_effect=effect, effect_duration=effect_duration)
         video_segments.append(segment_path)
     
     # 合并所有视频片段

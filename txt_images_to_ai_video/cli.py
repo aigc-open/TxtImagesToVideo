@@ -22,7 +22,9 @@ class CLI:
         model="tts-1",
         temp_dir=None,
         audio_file=None,
-        keep_audio=False
+        keep_audio=False,
+        camera_effect=None,
+        effect_duration=1.5
     ):
         """
         将图片和旁白转化成视频
@@ -37,10 +39,13 @@ class CLI:
             temp_dir: 临时文件目录（默认: 输出视频所在目录下的 temp 文件夹）
             audio_file: 语音文件路径（可选）：如果文件存在则使用，不存在则生成到该路径
             keep_audio: 保留生成的语音文件（默认: False）
+            camera_effect: 运镜效果类型（zoom_in/zoom_out/pan_right/pan_left，默认: None）
+            effect_duration: 运镜效果持续时间（秒），默认: 1.5
         
         示例:
             python -m txt_images_to_ai_video generate --input_txt=script.txt --input_image=1.png,2.png --output_video=output.mp4
             python -m txt_images_to_ai_video generate --input_txt=script.txt --input_image=1.png,2.png --output_video=output.mp4 --voice=nova --speed=1.2
+            python -m txt_images_to_ai_video generate --input_txt=script.txt --input_image=1.png --output_video=output.mp4 --camera_effect=zoom_in
         
         环境变量:
             OPENAI_API_KEY     OpenAI API密钥（必需）
@@ -77,6 +82,8 @@ class CLI:
             print(f"  语音类型: {voice}")
             print(f"  语速: {speed}")
             print(f"  模型: {model}")
+            if camera_effect:
+                print(f"  运镜效果: {camera_effect} ({effect_duration}秒)")
             if audio_file:
                 audio_path = Path(audio_file)
                 if audio_path.exists():
@@ -98,7 +105,9 @@ class CLI:
                 tts_service=tts_service,
                 temp_dir=temp_dir,
                 audio_file=audio_file,
-                keep_audio=keep_audio
+                keep_audio=keep_audio,
+                camera_effect=camera_effect,
+                effect_duration=effect_duration
             )
             
             print("\n" + "=" * 60)
