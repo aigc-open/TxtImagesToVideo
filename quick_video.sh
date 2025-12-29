@@ -3,17 +3,25 @@
 # 视频生成脚本
 # 注意：需要先将 drawio 文件导出为 PNG 图片
 
+if [ -z "$OPENAI_API_KEY" ]; then
+  echo "未设置 OPENAI_API_KEY，已退出。"
+  exit 1
+fi
+
 cd "$(dirname "$0")"
 
 # 目录配置
-STATIC_DIR="/workspace/code/github/TxtImagesToVideo/ph8/all/"          # 静态资源目录（输入：图片、旁白文本）
+STATIC_DIR="/workspace/code/github/TxtImagesToVideo/ph8/adv/"          # 静态资源目录（输入：图片、旁白文本）
 OUTPUT_DIR="$STATIC_DIR/output"          # 输出目录（生成的视频）
 VIDEO_DIR="$OUTPUT_DIR/videos"  # 章节视频目录
 
 # 配置章节列表（格式：图片文件名:旁白文件名:视频文件名:章节标题）
+# 如需添加章节，按以下格式添加一行："图片1,图片2:旁白文本文件:输出视频文件:章节标题"
 CHAPTERS=(
-  "01-home-provider.png,01-home.png:01-home_script.txt:01-home.mp4:首页"
-  "02-model.png,02-model-image.png,02-model-video.png:02-model_script.txt:02-model.mp4:模型"
+  "01-home.png:01-home_script.txt:01-home.mp4:首页"
+  "02-model.png:02-model_script.txt:02-model.mp4:模型-概述"
+  "02-model-image.png:02-model-image_script.txt:02-model-image.mp4:模型-生图"
+  "02-model-video.png:02-model-video_script.txt:02-model-video.mp4:模型-文/图生视频"
   "03-api.png:03-api_script.txt:03-api.mp4:API"
   "04-cases.png,04-cases-docs.png:04-cases_script.txt:04-cases.mp4:案例"
 )
